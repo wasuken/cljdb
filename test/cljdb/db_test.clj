@@ -1,40 +1,29 @@
 (ns cljdb.db-test
   (:require [cljdb.db :as sut]
             [cljdb.util :refer [delete-directory-recursive]]
-            [clojure.test :refer [is testing with-test use-fixtures]]
+            [clojure.test :refer [is deftest use-fixtures]]
             [clojure.java.io :as io]))
 
+(def params {:name "test"
+             :columns {:hoge :text
+                       :fuga :int}})
+(def env {:directory "test-db"})
 
-(testing "Test database"
-  (with-test
-    (def params
-      {:name "test"
-       :columns {:hoge :text
-                 :fuga :int}})
-    (def env {:directory "test-db"})
-    (testing "create"
-      (with-test
-        (def params
-          {:name "test"
-           :columns {:hoge :text
-                     :fuga :int}
-       ;; constは後程。
-       ;; :constraint {
-       ;;              }
-           })
-        (def env {:directory "test-db"})
-        (sut/db-create params env)
-        (is (.exists (io/as-file (format "./test-db/%s/" (:name params)))))))
-    (testing "drop ops."
-      (with-test
-        (def params
-          {:name "test"
-           :columns {:hoge :text
-                     :fuga :int}})
-        (def env {:directory "test-db"})
-        (sut/db-drop params env)
-        (is (not (.exists (io/as-file (format "./test-db/%s/" (:name params))))))))))
+(deftest test-create
+  (sut/db-create params env)
+  (is (.exists (io/as-file (format "./test-db/%s/" (:name params))))))
 
+(deftest test-drop
+  (sut/db-create params env)
+  (sut/db-drop params env)
+  (is (not (.exists (io/as-file (format "./test-db/%s/" (:name params)))))))
+
+(deftest test-create-failed
+  (sut/db-create params env)
+  (is (thrown? clojure.lang.ExceptionInfo (sut/db-create params env))))
+
+(deftest test-drop-failed
+  (is (thrown? clojure.lang.ExceptionInfo (sut/db-drop params env))))
 
 (defn setup
   []
@@ -51,4 +40,4 @@
   (test-func)
   (cleanup))
 
-(use-fixtures :once fixture)
+(use-fixtures :each fixture)

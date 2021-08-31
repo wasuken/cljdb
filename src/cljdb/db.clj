@@ -7,6 +7,8 @@
 
 (defn db-create
   [params env]
+  (when (.exists (io/as-file (format "./%s/%s/" (:directory env) (:name params))))
+    (throw (ex-info "Already exists database." {})))
   (let [struct-path (format "./%s/%s/struct.json" (:directory env) (:name params))]
     (io/make-parents struct-path)
     (spit struct-path
@@ -14,9 +16,10 @@
 
 (defn db-drop
   [params env]
-  ;; TODO: exists check and move temp directory.
-  (delete-directory-recursive (delete-directory-recursive
-                               (format "./%s/%s/" (:directory env) (:name params)))))
+  (when (not (.exists (io/as-file (format "./%s/%s/" (:directory env) (:name params)))))
+    (throw (ex-info "Not exists database." {})))
+  (delete-directory-recursive
+   (io/as-file (format "./%s/%s/" (:directory env) (:name params)))))
 
 (defn db-alter
   [params env])
