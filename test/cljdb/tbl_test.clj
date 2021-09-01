@@ -18,6 +18,17 @@
   (let [params {:from "hgoe" :columns ["a" "b" "c"]}]
     (sut/tbl-create params env)
     (is (thrown? clojure.lang.ExceptionInfo (sut/tbl-create params env)))))
+(deftest test-drop
+  (let [params {:from "hgoe" :columns ["a" "b" "c"]}
+        tbl-path (format "./%s/%s/%s" (:directory env) (:use env) (:from params))]
+    (sut/tbl-create params env)
+    (sut/tbl-drop params env)
+    (is (not (.exists (io/as-file (format "%s/struct.json" tbl-path)))))
+    (is (not (.exists (io/as-file (format "%s/rows.csv" tbl-path)))))
+    (is (not (.exists (io/as-file tbl-path))))))
+(deftest test-drop-failed
+  (let [params {:from "hgoe" :columns ["a" "b" "c"]}]
+    (is (thrown? clojure.lang.ExceptionInfo (sut/tbl-drop params env)))))
 ;; (deftest test-alter)
 ;; (deftest test-alter-failed)
 

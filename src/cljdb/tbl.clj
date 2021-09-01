@@ -1,5 +1,6 @@
 (ns cljdb.tbl
-  (:require [cheshire.core :as json]
+  (:require [cljdb.util :refer [delete-directory-recursive]]
+            [cheshire.core :as json]
             [cheshire.parse :as parse]
             [clojure.data.csv :as csv]
             [clojure.java.io :as io]
@@ -9,7 +10,7 @@
   [params env]
   (let [tbl-path (format "./%s/%s/%s" (:directory env) (:use env) (:from params))]
     (when (.exists (io/as-file tbl-path))
-      (throw (ex-info "Already exists database." {})))
+      (throw (ex-info "Already exists table." {})))
     (io/make-parents (format "%s/a" tbl-path))
     (spit (format "%s/struct.json" tbl-path)
           (json/generate-string params))
@@ -18,7 +19,11 @@
                      [(:columns params)]))))
 
 (defn tbl-drop
-  [params env])
+  [params env]
+  (let [tbl-path (format "./%s/%s/%s" (:directory env) (:use env) (:from params))]
+    (when (not (.exists (io/as-file tbl-path)))
+      (throw (ex-info "Not exists table." {})))
+    (delete-directory-recursive (io/as-file tbl-path))))
 
 (defn tbl-alter
   [params env])
