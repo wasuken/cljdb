@@ -7,11 +7,13 @@
 
 (defn tbl-create
   [params env]
-  (let [struct-path (format "./%s/%s/%s/struct.json" (:directory env) (:database env) (:from params))]
-    (io/make-parents struct-path)
-    (spit struct-path
+  (let [tbl-path (format "./%s/%s/%s" (:directory env) (:use env) (:from params))]
+    (when (.exists (io/as-file tbl-path))
+      (throw (ex-info "Already exists database." {})))
+    (io/make-parents (format "%s/a" tbl-path))
+    (spit (format "%s/struct.json" tbl-path)
           (json/generate-string params))
-    (with-open [writer (io/writer (format "./%s/%s/%s/rows.csv" (:directory env) (:database env) (:from params)))]
+    (with-open [writer (io/writer (format "%s/rows.csv" tbl-path))]
       (csv/write-csv writer
                      [(:columns params)]))))
 
